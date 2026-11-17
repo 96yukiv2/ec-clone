@@ -1,12 +1,20 @@
 'use client';
 import {useEffect,useState} from 'react';
-import {request,yen,API} from '@/lib/api';
+import {request,yen,API,ApiError} from '@/lib/api';
+import Link from 'next/link';
 type Summary={orders:{orders:number;revenue:number};lowStock:{id:number;name:string;stock:number}[];trend:any[];ranking:any[]};
 export default function Admin(){
  const [summary,setSummary]=useState<Summary|null>(null),[orders,setOrders]=useState<any[]>([]),[error,setError]=useState(''),[message,setMessage]=useState(''),[name,setName]=useState(''),[slug,setSlug]=useState(''),[price,setPrice]=useState(1000),[stock,setStock]=useState(10),[sku,setSku]=useState(''),[parentProductId,setParentProductId]=useState(''),[variantLabel,setVariantLabel]=useState(''),[image,setImage]=useState(''),[editing,setEditing]=useState(''),[editStock,setEditStock]=useState('0'),[editPrice,setEditPrice]=useState('0'),[editActive,setEditActive]=useState(true);
  async function load(){try{
   const [s,o]=await Promise.all([request<Summary>('/admin/summary'),request<any[]>('/admin/orders')]);setSummary(s);setOrders(o);setError('');
- }catch(e:any){setError(e.message+' · この画面には管理者権限が必要です');}}
+ }catch(e:unknown){
+  if(e instanceof ApiError){
+   if(e.status===401){setError('未ログイン、セッション期限切れ、または管理者権限がありません。アカウントを確認してください。');return;}
+   if(e.status===403){setError('このアカウントには管理者権限がありません。');return;}
+   if(e.status>=500){setError('サーバー内部エラー（HTTP '+e.status+'）。docker compose logs --tail=100 api を確認してください。');return;}
+   setError('管理APIのエラー（HTTP '+e.status+'）：'+e.message);
+  }else{setError('APIと通信できません。APIコンテナを確認してください。');}
+ }}
  useEffect(()=>{load();},[]);
  async function create(){try{await request('/admin/products',{method:'POST',body:JSON.stringify({name,slug,price,stock,sku:sku||null,parentProductId:parentProductId?Number(parentProductId):null,variantLabel:variantLabel||null,image})});setMessage('商品を追加しました');setName('');setSlug('');load();}catch(e:any){setError(e.message);}}
  async function change(id:number,status:string){try{await request('/admin/orders/'+id,{method:'PATCH',body:JSON.stringify({status})});load();}catch(e:any){setError(e.message);}}
@@ -16,7 +24,7 @@ export default function Admin(){
   if(!response.ok)throw new Error('画像のアップロードに失敗しました');
   const value=await response.json();setImage(value.url);setMessage('画像を保存しました');
  }catch(e:any){setError(e.message);}}
- return <main className="container"><h1>ストア管理</h1>{error&&<p className="error">{error}</p>}{message&&<p>{message}</p>}
+ return <main className="container"><h1>ストア管理</h1>{error&&<div className="panel" role="alert"><p className="error">{error}</p><Link href="/account">ログイン状態を確認する</Link></div>}{message&&<p>{message}</p>}
  {summary&&<><div className="row"><div className="panel">注文総数 <h2>{summary.orders.orders}</h2></div><div className="panel">売上 <h2>{yen(summary.orders.revenue)}</h2></div></div>
  <div className="panel"><h2>在庫不足（5個以下）</h2>{summary.lowStock.map(p=><div key={p.id}>{p.name} — 残り {p.stock}</div>)}</div>
  <div className="panel"><h2>人気商品</h2>{summary.ranking.map(p=><div key={p.id}>{p.name} — {p.sold}個</div>)}</div>
