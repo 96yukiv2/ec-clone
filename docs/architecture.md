@@ -1,73 +1,84 @@
 # アーキテクチャ
 
-## 技術スタック
+## 採用技術
+Next.js・React・TypeScript、NestJS、PostgreSQL、Drizzle、Redis、BullMQ、Mailpit、Docker Compose。
 
-| 領域 | 採用 |
-|---|---|
-| フロントエンド | Next.js / React / TypeScript |
-| バックエンド | NestJS / TypeScript |
-| メインDB | PostgreSQL / Drizzle |
-| 一時データ・キャッシュ | Redis |
-| ジョブ処理 | BullMQ / Outbox |
-| メール確認 | Mailpit |
-| 実行 | Docker Compose |
-| 単体テスト | Vitest |
-| API結合テスト | Vitest / Supertest |
-| CI | GitHub Actions |
+## モジュラーモノリスと依存方向
 
-## モジュラーモノリス
+- Controller：HTTPのルーティング、パラメーター受け取り、レスポンス
+- Service：ユースケース、認証確認、業務ルール、状態遷移、整合性
+- Repository：SQL、トランザクション、DBとのやり取り
+- Common：DB接続、Redisキャッシュ、入力検証、セキュリティ
+- Worker：Outbox取得、BullMQジョブ、メール送信
 
-NestJS単一プロセスで機能の境界を作り、モジュール間は公開されたServiceや明示的な契約を通して連携します。クライアントUIとAPIは独立したアプリです。
-
-```mermaid
+\`\`\`mermaid
 flowchart LR
-  Browser[ブラウザ] --> Web[Next.js App Router]
-  Browser --> API[NestJS API]
-  Web --> API
-  API --> PG[(PostgreSQL)]
-  API --> Redis[(Redis)]
-  Worker[BullMQ Worker] --> PG
-  Worker --> Redis
+  UI[Next.js] --> CT[Controller]
+  CT --> S[Service]
+  S --> R[Repository]
+  R --> PG[(PostgreSQL)]
+  S --> Cache[Redis Cache]
+  Worker --> PG
   Worker --> Mail[Mailpit]
-```
+\`\`\`
 
-### バックエンドの依存関係
+## バックエンドのディレクトリ構成
 
-```text
-src/
-  app.ts                NestJSモジュールの組み立て
-  db.ts                 DB接続（インフラ）
-  schema.ts             DBスキーマ
-  auth.ts               認証Controller・Service
-  products.ts           商品Controller
-  orders.ts             注文Controller
-  orders.service.ts     注文ユースケース・取引制御
-  customer.ts           顧客情報
-  discovery.ts          レコメンド・ランキング
-  admin.ts              管理
-  guest.ts              ゲスト購入
-  media.ts              画像
-  security.ts           Origin検証・Rate Limit
-  worker.ts             非同期処理
-```
+\`\`\`text
+apps/api/src/
+├── app.ts
+├── main.ts
+├── common/
+│   ├── db.ts
+│   ├── cache.ts
+│   ├── schema.ts
+│   ├── security.ts
+│   └── validation.ts
+├── modules/
+│   ├── auth/
+│   │   └── auth.ts
+│   ├── catalog/
+│   │   ├── products.ts
+│   │   ├── products.service.ts
+│   │   ├── catalog.repository.ts
+│   │   └── discovery.ts
+│   ├── checkout/
+│   │   ├── orders.ts
+│   │   ├── orders.service.ts
+│   │   ├── orders.repository.ts
+│   │   └── guest.ts
+│   ├── customer/
+│   │   ├── customer.ts
+│   │   ├── customer.service.ts
+│   │   └── customer.repository.ts
+│   └── admin/
+│       ├── admin.ts
+│       ├── admin.service.ts
+│       ├── admin.repository.ts
+│       ├── media.ts
+│       └── jobs.ts
+├── tests/
+│   ├── app.integration.test.ts
+│   └── checkout.integration.test.ts
+└── worker/
+    └── worker.ts
+\`\`\`
 
-ControllerはHTTP入出力に集中し、Serviceはユースケースと取引境界、Repositoryは永続化処理を担当させる設計を目指します。現状一部の機能はControllerにSQLが残るため、今後の整理対象です。
+NestJSのDIにより、ControllerはServiceを受け取り、ServiceはRepositoryを受け取ります。商品・会員情報・注文・管理機能の主要処理にこの境界を導入しています。認証、ゲスト購入、レコメンド、画像、ジョブ管理にはなおSQL直結の箇所があるため、厳密な全機能のRepository分離は引き続き必要です。
 
-### フロントエンド
+## フロントエンド
 
-```text
-src/
-  app/                  ルーティング・ページ
-  components/           再利用するUI
-  lib/api.ts            APIクライアント
-  hooks/                状態管理・データ取得（必要に応じ追加）
-```
+\`\`\`text
+apps/web/src/
+├── app/           App Routerの画面とルート
+├── components/    再利用可能なUIと商品表示
+└── lib/           APIクライアント・金額表示・ゲストカート
+\`\`\`
 
-## 設計上の重要事項
+### 依存のルール
 
-1. 決済やメールなどDB外の処理は、単一のDBトランザクションには含めない。
-2. 在庫引当は行ロックと条件検証で保護する。
-3. 同じ注文要求を再送しても二重発注しないよう冪等性キーで制御する。
-4. イベント送信はOutboxを使い、Redisキューの一時障害とDB更新を切り離す。
-5. 認可はフロントエンドの表示制御だけに依存せず、APIで必ず検証する。
-6. ローカル学習専用。実用システムへの流用にはCSRF・セッション・決済・個人情報保護の追加監査が必要。
+- 認可の最終判定はAPIで行う
+- SQLをReactコンポーネントに書かない
+- 注文金額・税・在庫の確定は必ずサーバー側
+- 価格は購入時点で注文明細にスナップショット保存する
+- DB更新と外部メール処理は同じトランザクションに混ぜずOutboxを使う

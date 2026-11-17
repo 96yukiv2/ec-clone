@@ -1,12 +1,14 @@
-name: CI（単体・結合・画面E2E・ビルド）
+name: ECサイト CI
 on:
   push:
     branches: [main]
   pull_request:
+
 jobs:
   test:
+    name: 単体・結合・E2E・ビルド
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:17-alpine
@@ -45,22 +47,41 @@ jobs:
           node-version: '22'
       - name: 依存関係をインストール
         run: pnpm install --no-frozen-lockfile
-      - name: テスト用DBを作成
+      - name: テスト専用DBを作成
         run: |
           pnpm --filter @ec/api db:push
           pnpm --filter @ec/api db:optimize
           pnpm --filter @ec/api seed
-      - name: 単体テスト（バックエンド）
+      - name: バックエンド単体テスト
         run: pnpm --filter @ec/api test
-      - name: 単体テスト（フロントエンド）
+      - name: フロントエンド単体テスト
         run: pnpm --filter @ec/web test
       - name: API結合テスト
         run: pnpm --filter @ec/api test:integration
-      - name: バックエンドのビルド
+      - name: バックエンドビルド
         run: pnpm --filter @ec/api build
-      - name: フロントエンドのビルド
+      - name: フロントエンドビルド
         run: pnpm --filter @ec/web build
-      - name: Playwrightブラウザを導入
+      - name: ブラウザ導入
         run: pnpm --filter @ec/web exec playwright install --with-deps chromium
       - name: 画面E2Eテスト
         run: pnpm --filter @ec/web e2e
+
+  docker-smoke:
+    name: Docker Compose起動・購入フロー
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compose定義検証
+        run: docker compose config -q
+      - name: ローカルEC環境起動
+        run: docker compose up --detach --wait --wait-timeout 300
+      - name: API・Web・Mock注文を検証
+        run: node scripts/smoke.mjs
+      - name: 失敗時にサービスログを表示
+        if: failure()
+        run: docker compose logs --tail=180
+      - name: コンテナ停止
+        if: always()
+        run: docker compose down --volumes
