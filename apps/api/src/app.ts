@@ -4,6 +4,7 @@ import {Db} from './common/db';
 import {CacheService} from './common/cache';
 import {Auth,AuthController} from './modules/auth/auth';
 import {ProductsController} from './modules/catalog/products';
+import {ProductsService} from './modules/catalog/products.service';
 import {OrdersController} from './modules/checkout/orders';
 import {OrdersService} from './modules/checkout/orders.service';
 import {CustomerController} from './modules/customer/customer';
@@ -19,7 +20,7 @@ class InfrastructureModule{}
 @Global()
 @Module({imports:[InfrastructureModule],providers:[Auth],controllers:[AuthController],exports:[Auth]})
 class AuthModule{}
-@Module({imports:[InfrastructureModule,AuthModule],controllers:[ProductsController,DiscoveryController]})
+@Module({imports:[InfrastructureModule,AuthModule],providers:[ProductsService],controllers:[ProductsController,DiscoveryController]})
 class CatalogModule{}
 @Module({imports:[InfrastructureModule,AuthModule],providers:[OrdersService],controllers:[OrdersController,GuestController]})
 class CheckoutModule{}
