@@ -79,6 +79,8 @@ jobs:
         run: docker compose up --detach --wait --wait-timeout 300
       - name: API・Web・Mock注文を検証
         run: node scripts/smoke.mjs
+      - name: 商品検索の簡易負荷テスト
+        run: node scripts/load.mjs
       - name: 失敗時にサービスログを表示
         if: failure()
         run: docker compose logs --tail=180
