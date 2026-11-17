@@ -17,6 +17,8 @@ import {AdminController} from './modules/admin/admin';
 import {AdminService} from './modules/admin/admin.service';
 import {AdminRepository} from './modules/admin/admin.repository';
 import {DiscoveryController} from './modules/catalog/discovery';
+import {DiscoveryService} from './modules/catalog/discovery.service';
+import {DiscoveryRepository} from './modules/catalog/discovery.repository';
 import {MediaController,AdminUploadGuard} from './modules/admin/media';
 import {JobsController} from './modules/admin/jobs';
 import {GuestController} from './modules/checkout/guest';
@@ -27,7 +29,7 @@ class InfrastructureModule{}
 @Global()
 @Module({imports:[InfrastructureModule],providers:[Auth,AuthRepository],controllers:[AuthController],exports:[Auth]})
 class AuthModule{}
-@Module({imports:[InfrastructureModule,AuthModule],providers:[ProductsService,CatalogRepository],controllers:[ProductsController,DiscoveryController]})
+@Module({imports:[InfrastructureModule,AuthModule],providers:[ProductsService,CatalogRepository,DiscoveryService,DiscoveryRepository],controllers:[ProductsController,DiscoveryController]})
 class CatalogModule{}
 @Module({imports:[InfrastructureModule,AuthModule],providers:[OrdersService,OrdersRepository],controllers:[OrdersController,GuestController]})
 class CheckoutModule{}
