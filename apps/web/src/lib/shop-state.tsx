@@ -38,7 +38,7 @@ export function ShopProvider({children}:{children:ReactNode}){
   const storage=()=>{void refresh();};
   window.addEventListener('guest-cart-changed',changed);window.addEventListener('favorites-changed',changed);window.addEventListener('storage',storage);
   return ()=>{window.removeEventListener('guest-cart-changed',changed);window.removeEventListener('favorites-changed',changed);window.removeEventListener('storage',storage);};
- },[refresh,user]);
+ },[refresh]);
  const setCartQuantity=useCallback(async(id:number,quantity:number)=>{
   if(!Number.isSafeInteger(quantity)||quantity<0||quantity>99)throw Error('数量は0〜99で指定してください');
   if(user){const cart=await request<Line[]>('/cart/'+id,{method:'PUT',body:JSON.stringify({quantity})});setCartCount(cart.reduce((s,x)=>s+x.quantity,0));}
