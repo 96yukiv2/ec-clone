@@ -2,46 +2,48 @@
 import {useEffect,useState} from 'react';
 import Link from 'next/link';
 import {request,yen} from '@/lib/api';
-import {getGuestCart,setGuestItem,clearGuestCart} from '@/lib/guest-cart';
+import {getGuestCart,clearGuestCart} from '@/lib/guest-cart';
+import {useShop} from '@/lib/shop-state';
 type Item={product_id:number;name:string;price:number;quantity:number;stock:number};
 type Address={id:number;postal_code:string;region:string;city:string;line1:string};
 export default function Cart(){
- const [items,setItems]=useState<Item[]>([]),[guest,setGuest]=useState(false),[msg,setMsg]=useState(''),[coupon,setCoupon]=useState(''),[email,setEmail]=useState(''),[addresses,setAddresses]=useState<Address[]>([]),[addressId,setAddressId]=useState('');
- async function refresh(){
+ const {user,loading,setCartQuantity,refresh}=useShop();
+ const [items,setItems]=useState<Item[]>([]),[busy,setBusy]=useState(true),[msg,setMsg]=useState(''),[coupon,setCoupon]=useState(''),[email,setEmail]=useState(''),[addresses,setAddresses]=useState<Address[]>([]),[addressId,setAddressId]=useState('');
+ async function reload(){
+  setBusy(true);
   try{
-   const me=await request('/auth/me');
-   if(me){setGuest(false);setItems(await request('/cart'));setAddresses(await request('/account/addresses'));return;}
-   setGuest(true);
-   const stored=getGuestCart();
-   const list:Item[]=[];
-   for(const item of stored){try{const p=await request<any>('/products/'+item.productId);list.push({product_id:p.id,name:p.name,price:p.price,stock:p.stock,quantity:item.quantity});}catch{}}
-   setItems(list);
-  }catch(e:any){setMsg(e.message);}
+   if(user){setItems(await request<Item[]>('/cart'));setAddresses(await request<Address[]>('/account/addresses'));}
+   else{const result=await Promise.all(getGuestCart().map(async item=>{try{const p=await request<Item>('/products/'+item.productId);return {product_id:item.productId,name:p.name,price:p.price,quantity:item.quantity,stock:p.stock};}catch{return null;}}));setItems(result.filter((x):x is Item=>x!==null));}
+   setMsg('');
+  }catch{setMsg('カート情報を取得できませんでした。');}
+  finally{setBusy(false);}
  }
- useEffect(()=>{refresh();},[]);
- async function change(item:Item,quantity:number){
-  if(!Number.isSafeInteger(quantity)||quantity<0||quantity>99){setMsg('数量は0〜99で指定してください');return;}
-  if(guest){setGuestItem(item.product_id,quantity);refresh();return;}
-  try{setItems(await request('/cart/'+item.product_id,{method:'PUT',body:JSON.stringify({quantity})}));}catch(e:any){setMsg(e.message);}
+ useEffect(()=>{if(!loading)void reload();},[loading,user]);
+ async function change(item:Item,quantity:number){try{await setCartQuantity(item.product_id,quantity);await reload();}catch(e){setMsg(e instanceof Error?e.message:'変更できませんでした');}}
+ async function order(){
+  setBusy(true);
+  try{
+   const idempotencyKey=crypto.randomUUID();
+   if(!user){
+    if(!/^\S+@\S+\.\S+$/.test(email)){setMsg('ゲスト購入には有効なメールアドレスが必要です');return;}
+    await request('/guest/checkout',{method:'POST',body:JSON.stringify({email,items:getGuestCart(),idempotencyKey,couponCode:coupon})});
+    clearGuestCart();await refresh();window.location.href='/orders';return;
+   }
+   await request('/orders',{method:'POST',body:JSON.stringify({idempotencyKey,couponCode:coupon,addressId:addressId?Number(addressId):undefined})});
+   await refresh();window.location.href='/orders';
+  }catch(e){setMsg(e instanceof Error?e.message:'注文に失敗しました');}finally{setBusy(false);}
  }
- async function order(){try{
-  const key=crypto.randomUUID();
-  if(guest){
-   if(!email.includes('@')){setMsg('ゲスト購入にはメールアドレスが必要です');return;}
-   await request('/guest/checkout',{method:'POST',body:JSON.stringify({email,items:getGuestCart(),idempotencyKey:key,couponCode:coupon})});
-   clearGuestCart();location.href='/orders?guest=1';return;
-  }
-  const result=await request<{id:number}>('/orders',{method:'POST',body:JSON.stringify({idempotencyKey:key,couponCode:coupon,addressId:addressId?Number(addressId):null})});
-  location.href='/orders?new='+result.id;
- }catch(e:any){setMsg(e.message);}}
- const total=items.reduce((n,i)=>n+i.price*i.quantity,0);
+ const total=items.reduce((s,item)=>s+item.price*item.quantity,0);
  return <main className="container"><h1>ショッピングカート</h1><div className="panel">
- {guest&&<p className="muted">ゲストとして購入できます。会員登録すると購入履歴を管理できます。</p>}
- {items.map(i=><div className="row" key={i.product_id} style={{marginBottom:20}}><Link href={'/products/'+i.product_id}>{i.name}</Link><span className="spacer"/><span>{yen(i.price)}</span>
- <input type="number" min="0" max="99" value={i.quantity} onChange={e=>change(i,Number(e.target.value))} style={{width:65,padding:8}}/><button className="button secondary" onClick={()=>change(i,0)}>削除</button></div>)}
- <p>商品小計: <strong>{yen(total)}</strong>（送料・クーポンは注文時に計算）</p>
- {guest?<input type="email" placeholder="ゲスト購入用メールアドレス" value={email} onChange={e=>setEmail(e.target.value)} style={{padding:10}}/>:
- <select value={addressId} onChange={e=>setAddressId(e.target.value)}><option value="">配送先未指定</option>{addresses.map(a=><option value={a.id} key={a.id}>〒{a.postal_code} {a.region}{a.city}{a.line1}</option>)}</select>}
- <input placeholder="クーポンコード (WELCOME10)" value={coupon} onChange={e=>setCoupon(e.target.value)} style={{padding:10}}/>
- <button className="button" disabled={!items.length} onClick={order}>注文を作成</button>{msg&&<p className="error">{msg}</p>}</div></main>;
+ {!loading&&!user&&<p className="muted">ゲストとして購入できます。カートはこのブラウザに保存されます。</p>}
+ {busy||loading?<p>読み込み中…</p>:items.length===0?<p>カートは空です。<Link href="/">商品を探す</Link></p>:items.map(item=><div className="row" key={item.product_id} style={{marginBottom:20}}>
+ <Link href={'/products/'+item.product_id}>{item.name}</Link><span className="spacer"/><span>{yen(item.price)}</span>
+ <input type="number" min={0} max={99} value={item.quantity} aria-label={item.name+'の数量'} onChange={e=>change(item,Number(e.target.value))} style={{width:65,padding:8}}/>
+ <button className="button secondary" onClick={()=>change(item,0)}>削除</button></div>)}
+ <p>商品小計：<strong>{yen(total)}</strong>（送料・割引は注文時に計算）</p>
+ {!user&&<input type="email" placeholder="ゲスト購入用メールアドレス" value={email} onChange={e=>setEmail(e.target.value)} style={{padding:10}}/>}
+ {user&&<select value={addressId} onChange={e=>setAddressId(e.target.value)}><option value="">配送先未指定</option>{addresses.map(a=><option value={a.id} key={a.id}>〒{a.postal_code} {a.region}{a.city}{a.line1}</option>)}</select>}
+ <input placeholder="クーポンコード（WELCOME10）" value={coupon} onChange={e=>setCoupon(e.target.value)} style={{padding:10}}/>
+ <button className="button" disabled={!items.length||busy||loading} onClick={order}>注文を作成</button>
+ {msg&&<p className="error" role="alert">{msg}</p>}</div></main>;
 }
