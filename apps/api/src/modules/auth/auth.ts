@@ -1,4 +1,4 @@
-import {Controller,Post,Get,Body,Req,Res,UnauthorizedException,BadRequestException,Injectable} from '@nestjs/common';
+import {UnauthorizedException,BadRequestException,Injectable} from '@nestjs/common';
 import {Request,Response} from 'express';
 import {randomBytes,scryptSync,timingSafeEqual,createHash} from 'node:crypto';
 import {AuthRepository,Viewer} from './auth.repository';
@@ -53,12 +53,4 @@ export class Auth{
   res.clearCookie('session',{path:'/'});
   return {ok:true};
  }
-}
-@Controller('auth')
-export class AuthController{
- constructor(private readonly auth:Auth){}
- @Post('register') register(@Body() payload:any,@Res({passthrough:true}) res:Response){return this.auth.register(payload,res);}
- @Post('login') login(@Body() payload:any,@Res({passthrough:true}) res:Response){return this.auth.login(payload,res);}
- @Get('me') me(@Req() req:Request){return this.auth.viewer(req);}
- @Post('logout') logout(@Req() req:Request,@Res({passthrough:true}) res:Response){return this.auth.logout(req,res);}
 }
