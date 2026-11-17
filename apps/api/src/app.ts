@@ -28,8 +28,9 @@ import {GuestController} from './modules/checkout/guest';
 import {GuestService} from './modules/checkout/guest.service';
 import {GuestRepository} from './modules/checkout/guest.repository';
 import {SecurityMiddleware} from './common/security';
+import {HealthController} from './common/health';
 @Global()
-@Module({providers:[Db,CacheService],exports:[Db,CacheService]})
+@Module({providers:[Db,CacheService],controllers:[HealthController],exports:[Db,CacheService]})
 class InfrastructureModule{}
 @Global()
 @Module({imports:[InfrastructureModule],providers:[Auth,AuthRepository],controllers:[AuthController],exports:[Auth]})

@@ -5,3 +5,8 @@ dist
 *.log
 coverage
 .DS_Store
+
+# pnpmのローカルキャッシュ
+.pnpm-store/
+pnpm-store/
+**/.pnpm-store/
