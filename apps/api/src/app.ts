@@ -13,6 +13,7 @@ import {CustomerService} from './modules/customer/customer.service';
 import {CustomerRepository} from './modules/customer/customer.repository';
 import {AdminController} from './modules/admin/admin';
 import {AdminService} from './modules/admin/admin.service';
+import {AdminRepository} from './modules/admin/admin.repository';
 import {DiscoveryController} from './modules/catalog/discovery';
 import {MediaController,AdminUploadGuard} from './modules/admin/media';
 import {JobsController} from './modules/admin/jobs';
@@ -30,7 +31,7 @@ class CatalogModule{}
 class CheckoutModule{}
 @Module({imports:[InfrastructureModule,AuthModule],providers:[CustomerService,CustomerRepository],controllers:[CustomerController]})
 class CustomerModule{}
-@Module({imports:[InfrastructureModule,AuthModule],providers:[AdminUploadGuard,AdminService],controllers:[AdminController,MediaController,JobsController]})
+@Module({imports:[InfrastructureModule,AuthModule],providers:[AdminUploadGuard,AdminService,AdminRepository],controllers:[AdminController,MediaController,JobsController]})
 class AdminModule{}
 @Module({imports:[InfrastructureModule,AuthModule,CatalogModule,CheckoutModule,CustomerModule,AdminModule]})
 export class AppModule implements NestModule{configure(consumer:MiddlewareConsumer){consumer.apply(SecurityMiddleware).forRoutes('*');}}
