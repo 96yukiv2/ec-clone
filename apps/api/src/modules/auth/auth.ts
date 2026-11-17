@@ -1,5 +1,5 @@
 import {Inject} from '@nestjs/common';
-import {UnauthorizedException,BadRequestException,Injectable} from '@nestjs/common';
+import {UnauthorizedException,ForbiddenException,BadRequestException,Injectable} from '@nestjs/common';
 import {Request,Response} from 'express';
 import {randomBytes,scryptSync,timingSafeEqual,createHash} from 'node:crypto';
 import {AuthRepository,Viewer} from './auth.repository';
@@ -24,7 +24,8 @@ export class Auth{
  }
  async required(req:Request,admin=false){
   const user=await this.viewer(req);
-  if(!user||(admin&&user.role!=='admin'))throw new UnauthorizedException();
+  if(!user)throw new UnauthorizedException('ログインが必要です');
+  if(admin&&user.role!=='admin')throw new ForbiddenException('管理者権限が必要です');
   return user;
  }
  private async issue(userId:number,res:Response){
