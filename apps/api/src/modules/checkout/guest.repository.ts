@@ -1,9 +1,10 @@
+import {Inject} from '@nestjs/common';
 import {Injectable,BadRequestException,ConflictException} from '@nestjs/common';
 import {Db} from '../../common/db';
 import {money} from '../../common/validation';
 @Injectable()
 export class GuestRepository{
- constructor(private readonly db:Db){}
+ constructor(@Inject(Db) private readonly db:Db){}
  async checkout(data:{hash:string;email:string;key:string;items:Map<number,number>;coupon:string;address:unknown}){
   const {hash,email,key,items,coupon,address}=data;
   return this.db.transaction(async tx=>{

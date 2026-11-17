@@ -1,3 +1,4 @@
+import {Inject} from '@nestjs/common';
 import {Injectable,BadRequestException,ConflictException} from '@nestjs/common';
 import {Request} from 'express';
 import {Auth} from '../auth/auth';
@@ -6,7 +7,7 @@ import {AdminRepository} from './admin.repository';
 import {int,str} from '../../common/validation';
 @Injectable()
 export class AdminService{
- constructor(private readonly auth:Auth,private readonly repository:AdminRepository,private readonly cache:CacheService){}
+ constructor(@Inject(Auth) private readonly auth:Auth,@Inject(AdminRepository) private readonly repository:AdminRepository,@Inject(CacheService) private readonly cache:CacheService){}
  async summary(req:Request){await this.auth.required(req,true);return this.repository.summary();}
  async orders(req:Request){await this.auth.required(req,true);return this.repository.orders();}
  async status(req:Request,id:string,b:any){

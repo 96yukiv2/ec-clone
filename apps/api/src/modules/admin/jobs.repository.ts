@@ -1,8 +1,9 @@
+import {Inject} from '@nestjs/common';
 import {Injectable} from '@nestjs/common';
 import {Db} from '../../common/db';
 @Injectable()
 export class JobsRepository{
- constructor(private readonly db:Db){}
+ constructor(@Inject(Db) private readonly db:Db){}
  async list(){return (await this.db.query('SELECT id,event_type,attempts,available_at,processed_at FROM outbox ORDER BY id DESC LIMIT 100')).rows;}
  async retry(id:number){await this.db.query("UPDATE outbox SET attempts=0,available_at=now(),processed_at=NULL WHERE id=$1",[id]);}
  async expire(){

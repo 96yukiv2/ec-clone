@@ -1,8 +1,9 @@
+import {Inject} from '@nestjs/common';
 import {Injectable} from '@nestjs/common';
 import {Db} from '../../common/db';
 @Injectable()
 export class CustomerRepository{
- constructor(private readonly db:Db){}
+ constructor(@Inject(Db) private readonly db:Db){}
  async favorites(userId:number){return (await this.db.query('SELECT p.* FROM favorites f JOIN products p ON p.id=f.product_id WHERE f.user_id=$1',[userId])).rows;}
  async addFavorite(userId:number,productId:number){await this.db.query('INSERT INTO favorites(user_id,product_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[userId,productId]);}
  async removeFavorite(userId:number,productId:number){await this.db.query('DELETE FROM favorites WHERE user_id=$1 AND product_id=$2',[userId,productId]);}

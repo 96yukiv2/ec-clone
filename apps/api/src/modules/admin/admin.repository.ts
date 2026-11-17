@@ -1,8 +1,9 @@
+import {Inject} from '@nestjs/common';
 import {Injectable,BadRequestException} from '@nestjs/common';
 import {Db} from '../../common/db';
 @Injectable()
 export class AdminRepository{
- constructor(private readonly db:Db){}
+ constructor(@Inject(Db) private readonly db:Db){}
  async summary(){
   const [counts,lowStock,trend,ranking]=await Promise.all([
    this.db.query("SELECT count(*)::int orders,coalesce(sum(total) FILTER (WHERE status IN ('paid','shipped','delivered')),0)::bigint revenue FROM orders"),

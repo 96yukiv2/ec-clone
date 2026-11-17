@@ -1,9 +1,10 @@
+import {Inject} from '@nestjs/common';
 import {Controller,Get,Post,Patch,Param,Body,Req} from '@nestjs/common';
 import {Request} from 'express';
 import {AdminService} from './admin.service';
 @Controller('admin')
 export class AdminController{
- constructor(private readonly service:AdminService){}
+ constructor(@Inject(AdminService) private readonly service:AdminService){}
  @Get('summary') summary(@Req() req:Request){return this.service.summary(req);}
  @Get('orders') orders(@Req() req:Request){return this.service.orders(req);}
  @Patch('orders/:id') status(@Req() req:Request,@Param('id') id:string,@Body() body:any){return this.service.status(req,id,body);}

@@ -1,3 +1,4 @@
+import {Inject} from '@nestjs/common';
 import {Controller,Post,Req,UploadedFile,UseInterceptors,UseGuards,Injectable,CanActivate,ExecutionContext,BadRequestException} from '@nestjs/common';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {diskStorage} from 'multer';
@@ -11,7 +12,7 @@ const directory=process.env.UPLOAD_DIR||join(process.cwd(),'uploads');
 mkdirSync(directory,{recursive:true});
 @Injectable()
 export class AdminUploadGuard implements CanActivate{
- constructor(private readonly auth:Auth){}
+ constructor(@Inject(Auth) private readonly auth:Auth){}
  async canActivate(context:ExecutionContext):Promise<boolean>{
   await this.auth.required(context.switchToHttp().getRequest<Request>(),true);
   return true;
@@ -19,7 +20,7 @@ export class AdminUploadGuard implements CanActivate{
 }
 @Controller('admin/media')
 export class MediaController{
- constructor(private auth:Auth){}
+ constructor(@Inject(Auth) private auth:Auth){}
  @Post()
  @UseGuards(AdminUploadGuard)
  @UseInterceptors(FileInterceptor('file',{

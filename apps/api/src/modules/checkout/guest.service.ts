@@ -1,3 +1,4 @@
+import {Inject} from '@nestjs/common';
 import {Injectable,BadRequestException,ForbiddenException} from '@nestjs/common';
 import {Request,Response} from 'express';
 import {createHash,randomBytes} from 'node:crypto';
@@ -6,7 +7,7 @@ import {GuestRepository} from './guest.repository';
 const digest=(text:string)=>createHash('sha256').update(text).digest('hex');
 @Injectable()
 export class GuestService{
- constructor(private readonly repository:GuestRepository){}
+ constructor(@Inject(GuestRepository) private readonly repository:GuestRepository){}
  async checkout(body:any,req:Request,res:Response){
   const email=str(body?.email,3,200).toLowerCase();
   if(!/^[^@ ]+@[^@ ]+\.[^@ ]+$/.test(email))throw new BadRequestException('メールアドレスが不正です');
