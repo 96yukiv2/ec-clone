@@ -1,44 +1,56 @@
 # ec-clone
 
-Local-first EC learning playground, with a Next.js frontend, NestJS backend, PostgreSQL + Drizzle, Redis, Mailpit and Docker Compose.
+Local-first ecommerce playground: Next.js + React + TypeScript, NestJS modular monolith, PostgreSQL with Drizzle schema, plus Redis and Mailpit in Docker Compose.
 
-## Run
+## Start
 
-Requirements: Docker Desktop and Docker Compose.
+Requirements: Docker Desktop / Docker Compose, with free ports 3000, 4000, 5432, 6379 and 8025.
 
 ```sh
 docker compose up --build
 ```
 
-- Web: http://localhost:3000
+- Storefront: http://localhost:3000
 - API: http://localhost:4000
-- Swagger UI: http://localhost:4000/docs
+- Swagger: http://localhost:4000/docs
 - Mailpit: http://localhost:8025
 
-Register a user in the account page. Catalog seed includes 150 products and coupon code `WELCOME10` (10% off).
+On first start Drizzle pushes the schema and seeds 150 products. Register at `/account`. Use coupon `WELCOME10` for 10% off. Add a product to your cart, create an order, and choose Mock success/failure in `/orders`.
 
-## Current implemented subset
+To allow a specific **local** account to use `/admin`, register normally, then explicitly promote that account:
 
-- Product catalog: filtering by category, keyword and price, ordering, pagination, suggestions and related products APIs
-- Cookie sessions with scrypt password hashes and registration/login/logout
-- PostgreSQL cart, favorites, history and address APIs
-- Transactional checkout with stock row locks, order snapshots, coupons, shipping, and idempotency keys
-- Mock payment success/failure, cancellation and stock return
-- Purchaser-only review submission and helpful votes API
-- Basic web pages for catalog, product details, account, cart and orders
+```sh
+docker compose exec postgres psql -U ec -d ec -c "UPDATE users SET role='admin' WHERE email='your-local-email@example.test';"
+```
 
-## Still incomplete
-
-This is an initial, **unverified implementation**, not a finished Amazon clone. Missing work includes: admin UI + API, robust input validation and security hardening (CSRF/rate limiting), product variants/SKU, recommendation algorithms, upload/storage, Redis caching, background jobs/email, analytics, performance tests, full E2E/unit tests, webhook simulation, guest checkout and responsive UI polish. Stripe testing is explicitly postponed.
-
-No production deployment is intended. Mock checkout never charges a card. Do not store real personal information.
+Replace the placeholder email with the address used for registration. Do not promote arbitrary users. The admin page includes sales totals, daily revenue, low stock, popular products, product creation and shipping transitions.
 
 ## Architecture
 
-- `apps/web`: Next.js App Router
-- `apps/api`: NestJS controller-based modular monolith
-- `apps/api/src/schema.ts`: Drizzle table definitions
-- `apps/api/src/db.ts`: transactional PostgreSQL access; some domain queries use parameterized SQL for concurrency education
-- `apps/api/src/seed.ts`: idempotent sample catalog
+```text
+apps/
+  web/        Next.js App Router storefront
+  api/        NestJS modular monolith, PostgreSQL/Drizzle
+compose.yaml  PostgreSQL, Redis, Mailpit, API, Web
+```
 
-Note: Local startup / compile checks have not yet been run in this environment.
+The database schema lives in `apps/api/src/schema.ts`. Domain controllers are split into auth, products, customer, orders, and admin. DB operations use parameterized SQL alongside Drizzle schema definitions, specifically to make transaction behavior visible for study.
+
+## Current features
+
+- Product search/filter/sort, pagination, suggestions API, related products, rating aggregation
+- Email/password registration, login, logout, cookie-based sessions
+- Carts, favorites, browsing history, saved-address API
+- Transactional checkout: locked inventory, coupon and shipping calculations, item price snapshots, idempotency key
+- Mock payment success/failure, cancellation with inventory restoration
+- Purchaser-only reviews, rating and helpful votes
+- Admin APIs/UI for products, orders, revenue, rankings, low inventory and audit trail
+- Basic responsive catalog/product/cart/account/order/admin pages; seed data
+
+## Known unfinished work
+
+**This is a partial, not yet runtime-tested implementation.** Requested remaining features include product variants/SKU, guest checkout, login throttling/CSRF mitigation, client address UI, image upload/storage, Redis caching and invalidation, job queues/email, recommendation algorithms, price/rating/stock filter UI, webhook simulation, proper refund accounting, production-quality role/auth handling, load tests and E2E tests. Stripe test mode is postponed by design.
+
+The included unit test is illustrative and not sufficient to validate inventory concurrency, checkout idempotency, or security. Run `docker compose up --build`, `docker compose exec api sh -c 'corepack enable && pnpm --filter @ec/api test'`, and verify the user journeys locally.
+
+Do not expose this project to the public Internet or enter real customer/payment data. No actual money is charged.
