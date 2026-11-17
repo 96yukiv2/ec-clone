@@ -8,6 +8,7 @@ import {ProductsService} from './modules/catalog/products.service';
 import {OrdersController} from './modules/checkout/orders';
 import {OrdersService} from './modules/checkout/orders.service';
 import {CustomerController} from './modules/customer/customer';
+import {CustomerService} from './modules/customer/customer.service';
 import {AdminController} from './modules/admin/admin';
 import {DiscoveryController} from './modules/catalog/discovery';
 import {MediaController,AdminUploadGuard} from './modules/admin/media';
@@ -24,7 +25,7 @@ class AuthModule{}
 class CatalogModule{}
 @Module({imports:[InfrastructureModule,AuthModule],providers:[OrdersService],controllers:[OrdersController,GuestController]})
 class CheckoutModule{}
-@Module({imports:[InfrastructureModule,AuthModule],controllers:[CustomerController]})
+@Module({imports:[InfrastructureModule,AuthModule],providers:[CustomerService],controllers:[CustomerController]})
 class CustomerModule{}
 @Module({imports:[InfrastructureModule,AuthModule],providers:[AdminUploadGuard],controllers:[AdminController,MediaController,JobsController]})
 class AdminModule{}
