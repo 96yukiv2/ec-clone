@@ -56,3 +56,7 @@ docker compose exec postgres psql -U ec -d ec -c "UPDATE users SET role='admin' 
 ## 起動トラブルの対処
 
 Docker ComposeでAPIが `unhealthy` になる場合は、[起動時のトラブルシューティング](docs/troubleshooting.md) を参照してください。
+
+## 管理画面とデータベース
+
+[管理画面の使い方・CursorでPostgreSQLに接続する方法](docs/admin-and-database.md) を参照してください。
