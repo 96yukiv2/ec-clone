@@ -5,5 +5,6 @@ import {Auth,AuthController} from './auth';
 import {ProductsController} from './products';
 import {OrdersController} from './orders';
 import {CustomerController} from './customer';
-@Module({providers:[Db,Auth],controllers:[AuthController,ProductsController,OrdersController,CustomerController]})
+import {AdminController} from './admin';
+@Module({providers:[Db,Auth],controllers:[AuthController,ProductsController,OrdersController,CustomerController,AdminController]})
 export class AppModule {}
