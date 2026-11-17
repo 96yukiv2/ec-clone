@@ -63,7 +63,7 @@ describe('会員・商品検索・管理APIの結合テスト',()=>{
  });
  it('権限のない会員は商品登録できない',async()=>{
   const unauthorized=await request(app.getHttpServer()).post('/admin/products').set('Cookie',cookie).send({name:'不可',slug:'forbidden-'+suffix,price:1000,stock:1});
-  expect(unauthorized.status).toBe(401);
+  expect(unauthorized.status).toBe(403);
  });
  it('管理者昇格後の商品管理・監査・売上APIを検証する',async()=>{
   await db.query("UPDATE users SET role='admin' WHERE id=$1",[userId]);
