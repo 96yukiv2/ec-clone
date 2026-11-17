@@ -52,6 +52,8 @@ jobs:
           pnpm --filter @ec/api db:push
           pnpm --filter @ec/api db:optimize
           pnpm --filter @ec/api seed
+      - name: アーキテクチャ依存チェック
+        run: node scripts/check-architecture.mjs
       - name: バックエンド単体テスト
         run: pnpm --filter @ec/api test
       - name: フロントエンド単体テスト
