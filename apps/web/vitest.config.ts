@@ -1,2 +1,6 @@
 import {defineConfig} from 'vitest/config';
-export default defineConfig({test:{environment:'jsdom',include:['src/**/*.test.ts','src/**/*.test.tsx']}});
+import {fileURLToPath,URL} from 'node:url';
+export default defineConfig({
+ resolve:{alias:{'@':fileURLToPath(new URL('./src',import.meta.url))}},
+ test:{environment:'jsdom',include:['src/**/*.test.ts','src/**/*.test.tsx']}
+});
