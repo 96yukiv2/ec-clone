@@ -1,56 +1,54 @@
-# ec-clone
+# EC Clone — ECサイト開発学習プロジェクト
 
-Local-first ecommerce playground: Next.js + React + TypeScript, NestJS modular monolith, PostgreSQL with Drizzle schema, plus Redis and Mailpit in Docker Compose.
+Next.jsとNestJSでAmazonのようなECサイトの基本的な仕組みを作り、フロントエンド、バックエンド、データベース、決済、非同期処理、テストを学ぶための**ローカル専用**プロジェクトです。Amazonとは無関係です。
 
-## Start
+## 開発方針
 
-Requirements: Docker Desktop / Docker Compose, with free ports 3000, 4000, 5432, 6379 and 8025.
+- GitHubの `main` ブランチに直接反映し、PRを前提としません。
+- Next.js + React + TypeScript、NestJSのモジュラーモノリス、PostgreSQL、Redisを利用します。
+- 決済はMockです。Stripeテスト環境への接続は後から追加します。
+- 各サービスはDocker Composeで起動します。
+- 仕様・アーキテクチャ・実装状況は日本語の [docs](docs/README.md) に整理します。
+- 単体テスト・結合テスト・CIを利用します。
 
-```sh
+## 起動方法
+
+Docker Desktopが起動している状態で、以下を実行してください。
+
+```bash
+git clone https://github.com/96yukiv2/ec-clone.git
+cd ec-clone
 docker compose up --build
 ```
 
-- Storefront: http://localhost:3000
-- API: http://localhost:4000
-- Swagger: http://localhost:4000/docs
-- Mailpit: http://localhost:8025
+| 用途 | URL |
+|---|---|
+| 商品サイト | http://localhost:3000 |
+| REST API | http://localhost:4000 |
+| Swagger | http://localhost:4000/docs |
+| テストメール | http://localhost:8025 |
 
-On first start Drizzle pushes the schema and seeds 150 products. Register at `/account`. Use coupon `WELCOME10` for 10% off. Add a product to your cart, create an order, and choose Mock success/failure in `/orders`.
+初期商品150件、割引クーポン `WELCOME10` を用意しています。
 
-To allow a specific **local** account to use `/admin`, register normally, then explicitly promote that account:
+## 管理者登録
 
-```sh
+まず `/account` からアカウントを登録し、**自分のローカルアカウントだけ**管理者に変更します。
+
+```bash
 docker compose exec postgres psql -U ec -d ec -c "UPDATE users SET role='admin' WHERE email='your-local-email@example.test';"
 ```
 
-Replace the placeholder email with the address used for registration. Do not promote arbitrary users. The admin page includes sales totals, daily revenue, low stock, popular products, product creation and shipping transitions.
+例のアドレスを実際の登録アドレスに変更してください。
 
-## Architecture
+## ドキュメント
 
-```text
-apps/
-  web/        Next.js App Router storefront
-  api/        NestJS modular monolith, PostgreSQL/Drizzle
-compose.yaml  PostgreSQL, Redis, Mailpit, API, Web
-```
+- [機能一覧・実装状況](docs/features.md)
+- [アーキテクチャ](docs/architecture.md)
+- [DB・注文処理](docs/data-and-orders.md)
+- [開発・テスト・CI](docs/development.md)
 
-The database schema lives in `apps/api/src/schema.ts`. Domain controllers are split into auth, products, customer, orders, and admin. DB operations use parameterized SQL alongside Drizzle schema definitions, specifically to make transaction behavior visible for study.
+## 検証上の注意
 
-## Current features
+**すべての要求機能の動作完了を保証する状態ではありません。** GitHubへのコード反映と、実際のビルド・単体テスト・結合テスト・E2Eテスト完了は別です。未完成機能は上記の一覧で明示しています。現状、Docker実行・CI完走はこの作業環境から確認できていません。
 
-- Product search/filter/sort, pagination, suggestions API, related products, rating aggregation
-- Email/password registration, login, logout, cookie-based sessions
-- Carts, favorites, browsing history, saved-address API
-- Transactional checkout: locked inventory, coupon and shipping calculations, item price snapshots, idempotency key
-- Mock payment success/failure, cancellation with inventory restoration
-- Purchaser-only reviews, rating and helpful votes
-- Admin APIs/UI for products, orders, revenue, rankings, low inventory and audit trail
-- Basic responsive catalog/product/cart/account/order/admin pages; seed data
-
-## Known unfinished work
-
-**This is a partial, not yet runtime-tested implementation.** Requested remaining features include product variants/SKU, guest checkout, login throttling/CSRF mitigation, client address UI, image upload/storage, Redis caching and invalidation, job queues/email, recommendation algorithms, price/rating/stock filter UI, webhook simulation, proper refund accounting, production-quality role/auth handling, load tests and E2E tests. Stripe test mode is postponed by design.
-
-The included unit test is illustrative and not sufficient to validate inventory concurrency, checkout idempotency, or security. Run `docker compose up --build`, `docker compose exec api sh -c 'corepack enable && pnpm --filter @ec/api test'`, and verify the user journeys locally.
-
-Do not expose this project to the public Internet or enter real customer/payment data. No actual money is charged.
+公開・商用利用を想定していません。実在する顧客の個人情報や決済情報は登録しないでください。

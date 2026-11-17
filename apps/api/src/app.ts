@@ -1,10 +1,30 @@
 import 'reflect-metadata';
-import {Module} from '@nestjs/common';
+import {Module,NestModule,MiddlewareConsumer,Global} from '@nestjs/common';
 import {Db} from './db';
 import {Auth,AuthController} from './auth';
 import {ProductsController} from './products';
 import {OrdersController} from './orders';
+import {OrdersService} from './orders.service';
 import {CustomerController} from './customer';
 import {AdminController} from './admin';
-@Module({providers:[Db,Auth],controllers:[AuthController,ProductsController,OrdersController,CustomerController,AdminController]})
-export class AppModule {}
+import {DiscoveryController} from './discovery';
+import {MediaController,AdminUploadGuard} from './media';
+import {JobsController} from './jobs';
+import {GuestController} from './guest';
+import {SecurityMiddleware} from './security';
+@Global()
+@Module({providers:[Db],exports:[Db]})
+class DatabaseModule{}
+@Global()
+@Module({imports:[DatabaseModule],providers:[Auth],controllers:[AuthController],exports:[Auth]})
+class AuthModule{}
+@Module({imports:[DatabaseModule,AuthModule],controllers:[ProductsController,DiscoveryController]})
+class CatalogModule{}
+@Module({imports:[DatabaseModule,AuthModule],providers:[OrdersService],controllers:[OrdersController,GuestController]})
+class CheckoutModule{}
+@Module({imports:[DatabaseModule,AuthModule],controllers:[CustomerController]})
+class CustomerModule{}
+@Module({imports:[DatabaseModule,AuthModule],providers:[AdminUploadGuard],controllers:[AdminController,MediaController,JobsController]})
+class AdminModule{}
+@Module({imports:[DatabaseModule,AuthModule,CatalogModule,CheckoutModule,CustomerModule,AdminModule]})
+export class AppModule implements NestModule{configure(consumer:MiddlewareConsumer){consumer.apply(SecurityMiddleware).forRoutes('*');}}

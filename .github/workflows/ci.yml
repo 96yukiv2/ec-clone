@@ -1,0 +1,59 @@
+name: CI（型チェック・単体テスト・結合テスト）
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ec
+          POSTGRES_PASSWORD: ec
+          POSTGRES_DB: ec_test
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ec -d ec_test"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://ec:ec@localhost:5433/ec_test
+      REDIS_URL: redis://localhost:6379
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 依存関係のインストール
+        run: pnpm install --no-frozen-lockfile
+      - name: PostgreSQLのスキーマを構築
+        run: |
+          pnpm --filter @ec/api db:push
+          pnpm --filter @ec/api db:optimize
+          pnpm --filter @ec/api seed
+      - name: バックエンド単体テスト
+        run: pnpm --filter @ec/api test
+      - name: フロントエンド単体テスト
+        run: pnpm --filter @ec/web test
+      - name: バックエンド結合テスト
+        run: pnpm --filter @ec/api test:integration
+      - name: バックエンド型チェック・ビルド
+        run: pnpm --filter @ec/api build
+      - name: フロントエンド型チェック・ビルド
+        run: pnpm --filter @ec/web build

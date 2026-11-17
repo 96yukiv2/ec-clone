@@ -1,10 +1,7 @@
 services:
   postgres:
     image: postgres:17-alpine
-    environment:
-      POSTGRES_USER: ec
-      POSTGRES_PASSWORD: ec
-      POSTGRES_DB: ec
+    environment: {POSTGRES_USER: ec, POSTGRES_PASSWORD: ec, POSTGRES_DB: ec}
     ports: ["5432:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
@@ -20,27 +17,48 @@ services:
   api:
     image: node:22-alpine
     working_dir: /app
-    volumes: [".:/app", "api_modules:/app/node_modules"]
+    volumes: [".:/app", "node_modules:/app/node_modules", "uploads:/app/apps/api/uploads"]
     environment:
       DATABASE_URL: postgres://ec:ec@postgres:5432/ec
       REDIS_URL: redis://redis:6379
       PORT: "4000"
       NODE_ENV: development
+      SMTP_HOST: mailpit
+      UPLOAD_DIR: /app/apps/api/uploads
     ports: ["4000:4000"]
     depends_on:
-      postgres: { condition: service_healthy }
-    command: sh -c "corepack enable && corepack prepare pnpm@10.11.0 --activate && pnpm install --no-frozen-lockfile && pnpm --filter @ec/api db:push && pnpm --filter @ec/api seed && pnpm --filter @ec/api dev"
+      postgres: {condition: service_healthy}
+      redis: {condition: service_started}
+    command: sh -c "corepack enable && corepack prepare pnpm@10.11.0 --activate && pnpm install --no-frozen-lockfile && pnpm --filter @ec/api db:push && pnpm --filter @ec/api db:optimize && pnpm --filter @ec/api seed && pnpm --filter @ec/api dev"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:4000/products || exit 1"]
+      interval: 5s
+      retries: 30
+      start_period: 20s
   web:
     image: node:22-alpine
     working_dir: /app
-    volumes: [".:/app", "web_modules:/app/node_modules"]
+    volumes: [".:/app", "node_modules:/app/node_modules"]
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:4000
       API_INTERNAL_URL: http://api:4000
     ports: ["3000:3000"]
-    depends_on: [api]
-    command: sh -c "corepack enable && corepack prepare pnpm@10.11.0 --activate && pnpm install --no-frozen-lockfile && pnpm --filter @ec/web dev"
+    depends_on:
+      api: {condition: service_healthy}
+    command: sh -c "corepack enable && corepack prepare pnpm@10.11.0 --activate && pnpm --filter @ec/web dev"
+  worker:
+    image: node:22-alpine
+    working_dir: /app
+    volumes: [".:/app", "node_modules:/app/node_modules"]
+    environment:
+      DATABASE_URL: postgres://ec:ec@postgres:5432/ec
+      REDIS_URL: redis://redis:6379
+      SMTP_HOST: mailpit
+    depends_on:
+      api: {condition: service_healthy}
+      mailpit: {condition: service_started}
+    command: sh -c "corepack enable && corepack prepare pnpm@10.11.0 --activate && pnpm --filter @ec/api worker"
 volumes:
   pgdata:
-  api_modules:
-  web_modules:
+  node_modules:
+  uploads:
