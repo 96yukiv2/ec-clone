@@ -1,21 +1,18 @@
 import {Controller,Get,Query,Req,Param} from '@nestjs/common';
 import {Request} from 'express';
-import Redis from 'ioredis';
 import {Db} from './db';
 import {Auth} from './auth';
+import {CacheService} from './cache';
 const number=(x:any,d=0)=>Number.isSafeInteger(Number(x))?Number(x):d;
 @Controller('discovery')
 export class DiscoveryController{
- private redis=new Redis(process.env.REDIS_URL||'redis://localhost:6379',{maxRetriesPerRequest:1});
- constructor(private db:Db,private auth:Auth){}
+ constructor(private db:Db,private auth:Auth,private cache:CacheService){}
  private async cached(key:string,fn:()=>Promise<any>){
-  try{const cache=await this.redis.get(key);if(cache)return JSON.parse(cache);}catch{}
-  const value=await fn();
-  try{await this.redis.set(key,JSON.stringify(value),'EX',60);}catch{}
-  return value;
+  const hit=await this.cache.get(key);
+  if(hit!==null)return hit;
+  const value=await fn();await this.cache.put(key,value,60);return value;
  }
- @Get('trending')
- async trending(){return this.cached('discover:trending',async()=>(
+ @Get('trending') async trending(){return this.cached('discover:trending',async()=>(
   await this.db.query("SELECT p.id,p.name,p.price,p.stock,p.image,coalesce(sum(oi.quantity),0)::int purchases FROM products p LEFT JOIN order_items oi ON oi.product_id=p.id WHERE p.active=true AND p.parent_product_id IS NULL GROUP BY p.id ORDER BY purchases DESC,p.id ASC LIMIT 12")
  ).rows);}
  @Get('recent') async recent(@Req() req:Request){
@@ -23,9 +20,7 @@ export class DiscoveryController{
   return (await this.db.query('SELECT DISTINCT ON (h.product_id) p.*,h.viewed_at FROM view_history h JOIN products p ON p.id=h.product_id WHERE h.user_id=$1 ORDER BY h.product_id,h.viewed_at DESC LIMIT 24',[u.id])).rows;
  }
  @Get('recommendations') async recommendations(@Req() req:Request){
-  const u=await this.auth.viewer(req);
-  if(!u)return this.trending();
-  // Customers who purchased products in common provide candidate product IDs.
+  const u=await this.auth.viewer(req);if(!u)return this.trending();
   const result=await this.db.query(`WITH mine AS (
    SELECT DISTINCT oi.product_id FROM order_items oi JOIN orders o ON o.id=oi.order_id WHERE o.user_id=$1
   ), similar AS (

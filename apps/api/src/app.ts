@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import {Module,NestModule,MiddlewareConsumer,Global} from '@nestjs/common';
 import {Db} from './db';
+import {CacheService} from './cache';
 import {Auth,AuthController} from './auth';
 import {ProductsController} from './products';
 import {OrdersController} from './orders';
@@ -13,18 +14,18 @@ import {JobsController} from './jobs';
 import {GuestController} from './guest';
 import {SecurityMiddleware} from './security';
 @Global()
-@Module({providers:[Db],exports:[Db]})
-class DatabaseModule{}
+@Module({providers:[Db,CacheService],exports:[Db,CacheService]})
+class InfrastructureModule{}
 @Global()
-@Module({imports:[DatabaseModule],providers:[Auth],controllers:[AuthController],exports:[Auth]})
+@Module({imports:[InfrastructureModule],providers:[Auth],controllers:[AuthController],exports:[Auth]})
 class AuthModule{}
-@Module({imports:[DatabaseModule,AuthModule],controllers:[ProductsController,DiscoveryController]})
+@Module({imports:[InfrastructureModule,AuthModule],controllers:[ProductsController,DiscoveryController]})
 class CatalogModule{}
-@Module({imports:[DatabaseModule,AuthModule],providers:[OrdersService],controllers:[OrdersController,GuestController]})
+@Module({imports:[InfrastructureModule,AuthModule],providers:[OrdersService],controllers:[OrdersController,GuestController]})
 class CheckoutModule{}
-@Module({imports:[DatabaseModule,AuthModule],controllers:[CustomerController]})
+@Module({imports:[InfrastructureModule,AuthModule],controllers:[CustomerController]})
 class CustomerModule{}
-@Module({imports:[DatabaseModule,AuthModule],providers:[AdminUploadGuard],controllers:[AdminController,MediaController,JobsController]})
+@Module({imports:[InfrastructureModule,AuthModule],providers:[AdminUploadGuard],controllers:[AdminController,MediaController,JobsController]})
 class AdminModule{}
-@Module({imports:[DatabaseModule,AuthModule,CatalogModule,CheckoutModule,CustomerModule,AdminModule]})
+@Module({imports:[InfrastructureModule,AuthModule,CatalogModule,CheckoutModule,CustomerModule,AdminModule]})
 export class AppModule implements NestModule{configure(consumer:MiddlewareConsumer){consumer.apply(SecurityMiddleware).forRoutes('*');}}
