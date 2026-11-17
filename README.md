@@ -52,3 +52,7 @@ docker compose exec postgres psql -U ec -d ec -c "UPDATE users SET role='admin' 
 **すべての要求機能の動作完了を保証する状態ではありません。** GitHubへのコード反映と、実際のビルド・単体テスト・結合テスト・E2Eテスト完了は別です。未完成機能は上記の一覧で明示しています。現状、Docker実行・CI完走はこの作業環境から確認できていません。
 
 公開・商用利用を想定していません。実在する顧客の個人情報や決済情報は登録しないでください。
+
+## 起動トラブルの対処
+
+Docker ComposeでAPIが `unhealthy` になる場合は、[起動時のトラブルシューティング](docs/troubleshooting.md) を参照してください。
