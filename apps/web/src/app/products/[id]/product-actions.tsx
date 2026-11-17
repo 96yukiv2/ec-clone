@@ -1,15 +1,12 @@
 'use client';
 import {useState} from 'react';
-import {request} from '@/lib/api';
-import {getGuestCart,setGuestItem} from '@/lib/guest-cart';
+import {useShop} from '@/lib/shop-state';
 export default function ProductActions({id,stock}:{id:number;stock:number}){
- const [quantity,setQuantity]=useState(1),[msg,setMsg]=useState('');
- return <div className="row"><input type="number" min={1} max={Math.max(1,stock)} value={quantity} style={{width:75,padding:10}} onChange={e=>setQuantity(Number(e.target.value))}/>
- <button className="button" disabled={stock<=0} onClick={async()=>{
-  if(!Number.isSafeInteger(quantity)||quantity<1||quantity>99){setMsg('数量が不正です');return;}
-  try{const session=await request('/auth/me');if(session){await request('/cart/'+id,{method:'PUT',body:JSON.stringify({quantity})});setMsg('カートに追加しました');return;}}
-  catch{}
-  setGuestItem(id,Math.min(99,(getGuestCart().find(i=>i.productId===id)?.quantity||0)+quantity));setMsg('ゲストカートに追加しました');
- }}>カートに追加</button>
- <button className="button secondary" onClick={async()=>{try{await request('/account/favorites/'+id,{method:'POST'});setMsg('お気に入りに登録しました');}catch{setMsg('お気に入り登録にはログインが必要です');}}}>♡ お気に入り</button><span>{msg}</span></div>;
+ const [quantity,setQuantity]=useState(1),[busy,setBusy]=useState(false),[msg,setMsg]=useState('');
+ const {addToCart,toggleFavorite,isFavorite,user}=useShop();
+ async function act(fn:()=>Promise<void>,success:string){setBusy(true);try{await fn();setMsg(success);}catch(e){setMsg(e instanceof Error?e.message:'操作に失敗しました');}finally{setBusy(false);}}
+ return <div className="row"><input type="number" min="1" max={Math.max(1,stock)} value={quantity} onChange={e=>setQuantity(Number(e.target.value))} style={{width:75,padding:10}}/>
+ <button className="button" disabled={busy||stock<=0} onClick={()=>act(()=>addToCart(id,quantity),'カートに追加しました')}>カートに追加</button>
+ <button className="button secondary" disabled={busy} onClick={()=>act(()=>toggleFavorite(id),'お気に入りを更新しました')}>{isFavorite(id)?'♥ お気に入り済み':'♡ お気に入り'}</button>
+ {msg&&<span role="status">{msg}</span>}{!user&&<small className="muted">ゲストのお気に入りとカートはブラウザに保存します</small>}</div>;
 }
