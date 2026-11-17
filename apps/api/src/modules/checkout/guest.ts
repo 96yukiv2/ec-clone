@@ -1,8 +1,8 @@
 import {Controller,Post,Get,Req,Res,Body,Param,BadRequestException,ConflictException,ForbiddenException} from '@nestjs/common';
 import {Request,Response} from 'express';
 import {createHash,randomBytes} from 'node:crypto';
-import {Db} from './db';
-import {money,int,str} from './validation';
+import {Db} from '../../common/db';
+import {money,int,str} from '../../common/validation';
 const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
 @Controller('guest')
 export class GuestController{

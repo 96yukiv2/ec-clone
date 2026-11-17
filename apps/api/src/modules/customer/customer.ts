@@ -1,7 +1,7 @@
 import {Controller,Get,Post,Delete,Req,Body,Param,BadRequestException} from '@nestjs/common';
 import {Request} from 'express';
-import {Db} from './db';
-import {Auth} from './auth';
+import {Db} from '../../common/db';
+import {Auth} from '../auth/auth';
 @Controller('account')
 export class CustomerController {
  constructor(private db:Db,private auth:Auth){}

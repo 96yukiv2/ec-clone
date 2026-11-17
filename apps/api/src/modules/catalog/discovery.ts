@@ -1,8 +1,8 @@
 import {Controller,Get,Query,Req,Param} from '@nestjs/common';
 import {Request} from 'express';
-import {Db} from './db';
-import {Auth} from './auth';
-import {CacheService} from './cache';
+import {Db} from '../../common/db';
+import {Auth} from '../auth/auth';
+import {CacheService} from '../../common/cache';
 const number=(x:any,d=0)=>Number.isSafeInteger(Number(x))?Number(x):d;
 @Controller('discovery')
 export class DiscoveryController{

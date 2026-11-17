@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Body, Req, Res, UnauthorizedException, BadRequestException, Injectable } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { randomBytes, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
-import { Db } from './db';
+import { Db } from '../../common/db';
 export type Viewer = { id: number; email: string; name: string; role: string };
 const digest = (s: string) => createHash('sha256').update(s).digest('hex');
 function hashPassword(password: string) {

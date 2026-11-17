@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Query, Req, Body, BadRequestException } from '@nestjs/common';
 import { Request } from 'express';
-import { Db } from './db';
-import { Auth } from './auth';
+import { Db } from '../../common/db';
+import { Auth } from '../auth/auth';
 const num=(v:any, fallback=0)=> {const n=Number(v);return Number.isFinite(n)?Math.trunc(n):fallback};
 @Controller('products')
 export class ProductsController {

@@ -1,6 +1,6 @@
 import {Injectable,BadRequestException,ConflictException} from '@nestjs/common';
-import {Db} from './db';
-import {int,money} from './validation';
+import {Db} from '../../common/db';
+import {int,money} from '../../common/validation';
 @Injectable()
 export class OrdersService{
  constructor(private readonly db:Db){}

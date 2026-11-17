@@ -1,8 +1,8 @@
 import {Controller,Get,Post,Put,Req,Body,Param,ForbiddenException} from '@nestjs/common';
 import {Request} from 'express';
-import {Auth} from './auth';
+import {Auth} from '../auth/auth';
 import {OrdersService} from './orders.service';
-import {int,str} from './validation';
+import {int,str} from '../../common/validation';
 @Controller()
 export class OrdersController{
  constructor(private readonly auth:Auth,private readonly orders:OrdersService){}
