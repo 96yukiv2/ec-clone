@@ -9,7 +9,7 @@
     "test:integration": "vitest run -c vitest.integration.config.ts",
     "db:push": "drizzle-kit push --force",
     "seed": "tsx src/seed.ts",
-    "worker": "tsx src/worker.ts",
+    "worker": "tsx src/worker/worker.ts",
     "db:optimize": "tsx src/optimize.ts"
   },
   "dependencies": {

@@ -4,8 +4,8 @@ import {NestFactory} from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import type {INestApplication} from '@nestjs/common';
 import request from 'supertest';
-import {AppModule} from './app';
-import {Db} from './db';
+import {AppModule} from '../app';
+import {Db} from '../common/db';
 describe('在庫・決済の結合テスト',()=>{
  let app:INestApplication;
  let db:Db;

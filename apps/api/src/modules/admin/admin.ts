@@ -1,9 +1,9 @@
 import {Controller,Get,Post,Patch,Param,Body,Req,BadRequestException,ConflictException} from '@nestjs/common';
 import {Request} from 'express';
-import {Db} from './db';
-import {Auth} from './auth';
-import {CacheService} from './cache';
-import {int,str} from './validation';
+import {Db} from '../../common/db';
+import {Auth} from '../auth/auth';
+import {CacheService} from '../../common/cache';
+import {int,str} from '../../common/validation';
 @Controller('admin')
 export class AdminController {
  constructor(private db:Db,private auth:Auth,private cache:CacheService){}

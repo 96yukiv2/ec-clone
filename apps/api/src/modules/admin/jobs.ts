@@ -1,7 +1,7 @@
 import {Controller,Get,Post,Req,Param,Body} from '@nestjs/common';
 import {Request} from 'express';
-import {Db} from './db';
-import {Auth} from './auth';
+import {Db} from '../../common/db';
+import {Auth} from '../auth/auth';
 @Controller('admin/jobs')
 export class JobsController{
  constructor(private db:Db,private auth:Auth){}

@@ -4,8 +4,8 @@ import {NestFactory} from '@nestjs/core';
 import type {INestApplication} from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
-import {AppModule} from './app';
-import {Db} from './db';
+import {AppModule} from '../app';
+import {Db} from '../common/db';
 describe('API結合テスト（専用PostgreSQL + Redis）',()=>{
  let app:INestApplication;
  let db:Db;
