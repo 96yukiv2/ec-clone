@@ -10,6 +10,7 @@ import {OrdersController} from './modules/checkout/orders';
 import {OrdersService} from './modules/checkout/orders.service';
 import {CustomerController} from './modules/customer/customer';
 import {CustomerService} from './modules/customer/customer.service';
+import {CustomerRepository} from './modules/customer/customer.repository';
 import {AdminController} from './modules/admin/admin';
 import {AdminService} from './modules/admin/admin.service';
 import {DiscoveryController} from './modules/catalog/discovery';
@@ -27,7 +28,7 @@ class AuthModule{}
 class CatalogModule{}
 @Module({imports:[InfrastructureModule,AuthModule],providers:[OrdersService],controllers:[OrdersController,GuestController]})
 class CheckoutModule{}
-@Module({imports:[InfrastructureModule,AuthModule],providers:[CustomerService],controllers:[CustomerController]})
+@Module({imports:[InfrastructureModule,AuthModule],providers:[CustomerService,CustomerRepository],controllers:[CustomerController]})
 class CustomerModule{}
 @Module({imports:[InfrastructureModule,AuthModule],providers:[AdminUploadGuard,AdminService],controllers:[AdminController,MediaController,JobsController]})
 class AdminModule{}
