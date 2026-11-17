@@ -1,18 +1,18 @@
 import 'reflect-metadata';
 import {Module,NestModule,MiddlewareConsumer,Global} from '@nestjs/common';
-import {Db} from './db';
-import {CacheService} from './cache';
-import {Auth,AuthController} from './auth';
-import {ProductsController} from './products';
-import {OrdersController} from './orders';
-import {OrdersService} from './orders.service';
-import {CustomerController} from './customer';
-import {AdminController} from './admin';
-import {DiscoveryController} from './discovery';
-import {MediaController,AdminUploadGuard} from './media';
-import {JobsController} from './jobs';
-import {GuestController} from './guest';
-import {SecurityMiddleware} from './security';
+import {Db} from './common/db';
+import {CacheService} from './common/cache';
+import {Auth,AuthController} from './modules/auth/auth';
+import {ProductsController} from './modules/catalog/products';
+import {OrdersController} from './modules/checkout/orders';
+import {OrdersService} from './modules/checkout/orders.service';
+import {CustomerController} from './modules/customer/customer';
+import {AdminController} from './modules/admin/admin';
+import {DiscoveryController} from './modules/catalog/discovery';
+import {MediaController,AdminUploadGuard} from './modules/admin/media';
+import {JobsController} from './modules/admin/jobs';
+import {GuestController} from './modules/checkout/guest';
+import {SecurityMiddleware} from './common/security';
 @Global()
 @Module({providers:[Db,CacheService],exports:[Db,CacheService]})
 class InfrastructureModule{}
