@@ -21,6 +21,8 @@ import {DiscoveryService} from './modules/catalog/discovery.service';
 import {DiscoveryRepository} from './modules/catalog/discovery.repository';
 import {MediaController,AdminUploadGuard} from './modules/admin/media';
 import {JobsController} from './modules/admin/jobs';
+import {JobsService} from './modules/admin/jobs.service';
+import {JobsRepository} from './modules/admin/jobs.repository';
 import {GuestController} from './modules/checkout/guest';
 import {SecurityMiddleware} from './common/security';
 @Global()
@@ -35,7 +37,7 @@ class CatalogModule{}
 class CheckoutModule{}
 @Module({imports:[InfrastructureModule,AuthModule],providers:[CustomerService,CustomerRepository],controllers:[CustomerController]})
 class CustomerModule{}
-@Module({imports:[InfrastructureModule,AuthModule],providers:[AdminUploadGuard,AdminService,AdminRepository],controllers:[AdminController,MediaController,JobsController]})
+@Module({imports:[InfrastructureModule,AuthModule],providers:[AdminUploadGuard,AdminService,AdminRepository,JobsService,JobsRepository],controllers:[AdminController,MediaController,JobsController]})
 class AdminModule{}
 @Module({imports:[InfrastructureModule,AuthModule,CatalogModule,CheckoutModule,CustomerModule,AdminModule]})
 export class AppModule implements NestModule{configure(consumer:MiddlewareConsumer){consumer.apply(SecurityMiddleware).forRoutes('*');}}
