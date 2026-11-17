@@ -2,13 +2,15 @@
 import {useEffect,useState} from 'react';
 import Link from 'next/link';
 import {request} from '@/lib/api';
+import {useShop} from '@/lib/shop-state';
 type Address={id:number;postal_code:string;region:string;city:string;line1:string;line2:string};
 export default function Account(){
+ const {refresh}=useShop();
  const [me,setMe]=useState<any>(null),[name,setName]=useState(''),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[error,setError]=useState(''),[addresses,setAddresses]=useState<Address[]>([]),[postalCode,setPostalCode]=useState(''),[region,setRegion]=useState(''),[city,setCity]=useState(''),[line1,setLine1]=useState('');
  const load=()=>request('/auth/me').then(u=>{setMe(u);if(u)request<Address[]>('/account/addresses').then(setAddresses);}).catch(()=>{});
  useEffect(()=>{load();},[]);
  async function submit(register:boolean){try{
-  const user=await request(register?'/auth/register':'/auth/login',{method:'POST',body:JSON.stringify({name,email,password})});setMe(user);setError('');
+  const user=await request(register?'/auth/register':'/auth/login',{method:'POST',body:JSON.stringify({name,email,password})});setMe(user);setError('');await refresh();
   request<Address[]>('/account/addresses').then(setAddresses).catch(()=>{});
  }catch(e:any){setError(e.message);}}
  async function addAddress(){try{
@@ -17,7 +19,7 @@ export default function Account(){
  }catch(e:any){setError(e.message);}}
  return <main className="container"><div className="panel"><h1>アカウント</h1>
  {me?<><p>{me.name} ({me.email})</p><p>権限: {me.role}</p><div className="row"><Link className="button secondary" href="/favorites">お気に入り</Link><Link className="button secondary" href="/orders">注文履歴</Link>
- <button className="button secondary" onClick={async()=>{await request('/auth/logout',{method:'POST'});setMe(null);setAddresses([]);}}>ログアウト</button></div></>:
+ <button className="button secondary" onClick={async()=>{await request('/auth/logout',{method:'POST'});setMe(null);setAddresses([]);await refresh();}}>ログアウト</button></div></>:
  <div className="form"><input placeholder="名前（新規登録用）" value={name} onChange={e=>setName(e.target.value)}/><input type="email" placeholder="メールアドレス" value={email} onChange={e=>setEmail(e.target.value)}/>
  <input type="password" placeholder="パスワード（10文字以上）" value={password} onChange={e=>setPassword(e.target.value)}/>
  <div className="row"><button className="button" onClick={()=>submit(false)}>ログイン</button><button className="button secondary" onClick={()=>submit(true)}>新規登録</button></div></div>}
