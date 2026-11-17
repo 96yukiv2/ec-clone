@@ -32,6 +32,7 @@ docker compose up --build
 - \`docker compose config -q\` で定義チェック
 - \`docker compose up --detach --wait\` でサービス起動
 - \`scripts/smoke.mjs\` によりWeb/商品API/登録/カート/注文/冪等性/Mock決済を確認
+- 商品検索APIの軽量な並行負荷チェック（`scripts/load.mjs`）
 - 失敗時のログ収集と、終了時のボリューム削除
 
 ## 手元でテストする場合

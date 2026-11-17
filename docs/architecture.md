@@ -36,17 +36,22 @@ apps/api/src/
 │   └── validation.ts
 ├── modules/
 │   ├── auth/
-│   │   └── auth.ts
+│   │   ├── auth.ts
+│   │   └── auth.repository.ts
 │   ├── catalog/
 │   │   ├── products.ts
 │   │   ├── products.service.ts
 │   │   ├── catalog.repository.ts
-│   │   └── discovery.ts
+│   │   ├── discovery.ts
+│   │   ├── discovery.service.ts
+│   │   └── discovery.repository.ts
 │   ├── checkout/
 │   │   ├── orders.ts
 │   │   ├── orders.service.ts
 │   │   ├── orders.repository.ts
-│   │   └── guest.ts
+│   │   ├── guest.ts
+│   │   ├── guest.service.ts
+│   │   └── guest.repository.ts
 │   ├── customer/
 │   │   ├── customer.ts
 │   │   ├── customer.service.ts
@@ -59,12 +64,13 @@ apps/api/src/
 │       └── jobs.ts
 ├── tests/
 │   ├── app.integration.test.ts
-│   └── checkout.integration.test.ts
+│   ├── checkout.integration.test.ts
+│   └── guest.integration.test.ts
 └── worker/
     └── worker.ts
 \`\`\`
 
-NestJSのDIにより、ControllerはServiceを受け取り、ServiceはRepositoryを受け取ります。商品・会員情報・注文・管理機能の主要処理にこの境界を導入しています。認証、ゲスト購入、レコメンド、画像、ジョブ管理にはなおSQL直結の箇所があるため、厳密な全機能のRepository分離は引き続き必要です。
+NestJSのDIにより、Controller → Service → Repositoryの責務境界を商品・認証・注文・ゲスト購入・顧客・管理・推薦・ジョブ管理へ導入しました。メディアのファイルシステム保存やWorkerは別のインフラ処理です。全経路の動作はCI実行結果で確認する必要があります。
 
 ## フロントエンド
 
