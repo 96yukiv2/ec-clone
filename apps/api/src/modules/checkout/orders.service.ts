@@ -1,9 +1,10 @@
+import {Inject} from '@nestjs/common';
 import {Injectable,BadRequestException,ConflictException} from '@nestjs/common';
 import {OrdersRepository} from './orders.repository';
 import {int,money} from '../../common/validation';
 @Injectable()
 export class OrdersService {
- constructor(private readonly repository:OrdersRepository){}
+ constructor(@Inject(OrdersRepository) private readonly repository:OrdersRepository){}
  cart(userId:number){return this.repository.cart(userId);}
  async setCart(userId:number,productId:unknown,quantity:unknown){
   const pid=int(productId,1),qty=int(quantity,0,99);

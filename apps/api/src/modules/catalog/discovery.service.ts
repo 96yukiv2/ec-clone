@@ -1,3 +1,4 @@
+import {Inject} from '@nestjs/common';
 import {Injectable} from '@nestjs/common';
 import {Request} from 'express';
 import {Auth} from '../auth/auth';
@@ -6,7 +7,7 @@ import {int} from '../../common/validation';
 import {DiscoveryRepository} from './discovery.repository';
 @Injectable()
 export class DiscoveryService{
- constructor(private readonly repository:DiscoveryRepository,private readonly cache:CacheService,private readonly auth:Auth){}
+ constructor(@Inject(DiscoveryRepository) private readonly repository:DiscoveryRepository,@Inject(CacheService) private readonly cache:CacheService,@Inject(Auth) private readonly auth:Auth){}
  private async cached<T>(key:string,load:()=>Promise<T>):Promise<T>{
   const hit=await this.cache.get<T>(key);
   if(hit!==null)return hit;

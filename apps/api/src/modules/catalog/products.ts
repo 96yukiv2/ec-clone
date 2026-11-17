@@ -1,9 +1,10 @@
+import {Inject} from '@nestjs/common';
 import {Controller,Get,Post,Param,Query,Req,Body} from '@nestjs/common';
 import {Request} from 'express';
 import {ProductsService} from './products.service';
 @Controller('products')
 export class ProductsController{
- constructor(private readonly service:ProductsService){}
+ constructor(@Inject(ProductsService) private readonly service:ProductsService){}
  @Get() list(@Query() q:any){return this.service.list(q);}
  @Get('suggest') suggest(@Query('q') q:string){return this.service.suggest(q);}
  @Get('categories') categories(){return this.service.categories();}

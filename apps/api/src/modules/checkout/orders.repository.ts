@@ -1,3 +1,4 @@
+import {Inject} from '@nestjs/common';
 import {Injectable} from '@nestjs/common';
 import type {PoolClient} from 'pg';
 import {Db} from '../../common/db';
@@ -33,7 +34,7 @@ class CheckoutTransaction {
 }
 @Injectable()
 export class OrdersRepository{
- constructor(private readonly db:Db){}
+ constructor(@Inject(Db) private readonly db:Db){}
  async cart(userId:number):Promise<CartLine[]>{return (await this.db.query('SELECT c.product_id,c.quantity,p.name,p.price,p.stock,p.image FROM carts c JOIN products p ON p.id=c.product_id WHERE c.user_id=$1 ORDER BY p.name',[userId])).rows as CartLine[];}
  async removeItem(userId:number,productId:number){await this.db.query('DELETE FROM carts WHERE user_id=$1 AND product_id=$2',[userId,productId]);}
  async productExists(productId:number){return Boolean((await this.db.query('SELECT 1 FROM products WHERE id=$1 AND active=true',[productId])).rowCount);}

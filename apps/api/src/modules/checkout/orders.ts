@@ -1,3 +1,4 @@
+import {Inject} from '@nestjs/common';
 import {Controller,Get,Post,Put,Req,Body,Param,ForbiddenException} from '@nestjs/common';
 import {Request} from 'express';
 import {Auth} from '../auth/auth';
@@ -5,7 +6,7 @@ import {OrdersService} from './orders.service';
 import {int,str} from '../../common/validation';
 @Controller()
 export class OrdersController{
- constructor(private readonly auth:Auth,private readonly orders:OrdersService){}
+ constructor(@Inject(Auth) private readonly auth:Auth,@Inject(OrdersService) private readonly orders:OrdersService){}
  @Get('cart') async cart(@Req() req:Request){return this.orders.cart((await this.auth.required(req)).id);}
  @Put('cart/:id') async setCart(@Req() req:Request,@Param('id') id:string,@Body() b:any){return this.orders.setCart((await this.auth.required(req)).id,id,b?.quantity);}
  @Get('orders') async list(@Req() req:Request){return this.orders.list((await this.auth.required(req)).id);}

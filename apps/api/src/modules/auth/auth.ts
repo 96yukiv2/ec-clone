@@ -1,3 +1,4 @@
+import {Inject} from '@nestjs/common';
 import {UnauthorizedException,BadRequestException,Injectable} from '@nestjs/common';
 import {Request,Response} from 'express';
 import {randomBytes,scryptSync,timingSafeEqual,createHash} from 'node:crypto';
@@ -15,7 +16,7 @@ function matches(password:string,hash:string){
 }
 @Injectable()
 export class Auth{
- constructor(private readonly repository:AuthRepository){}
+ constructor(@Inject(AuthRepository) private readonly repository:AuthRepository){}
  async viewer(req:Request):Promise<Viewer|null>{
   const token=req.cookies?.session;
   if(typeof token!=='string'||token.length<16)return null;

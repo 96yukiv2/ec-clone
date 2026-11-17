@@ -1,9 +1,10 @@
+import {Inject} from '@nestjs/common';
 import {Controller,Get,Query,Req,Param} from '@nestjs/common';
 import {Request} from 'express';
 import {DiscoveryService} from './discovery.service';
 @Controller('discovery')
 export class DiscoveryController{
- constructor(private readonly service:DiscoveryService){}
+ constructor(@Inject(DiscoveryService) private readonly service:DiscoveryService){}
  @Get('trending') trending(){return this.service.trending();}
  @Get('recent') recent(@Req() req:Request){return this.service.recent(req);}
  @Get('recommendations') recommendations(@Req() req:Request){return this.service.recommendations(req);}

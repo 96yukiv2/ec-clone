@@ -1,10 +1,11 @@
+import {Inject} from '@nestjs/common';
 import {Injectable} from '@nestjs/common';
 import {Db} from '../../common/db';
 export type Viewer={id:number;email:string;name:string;role:string};
 export type UserWithPassword=Viewer&{password_hash:string};
 @Injectable()
 export class AuthRepository{
- constructor(private readonly db:Db){}
+ constructor(@Inject(Db) private readonly db:Db){}
  async findSession(hash:string):Promise<Viewer|null>{
   const r=await this.db.query<Viewer>('SELECT u.id,u.email,u.name,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now()',[hash]);
   return r.rows[0]||null;

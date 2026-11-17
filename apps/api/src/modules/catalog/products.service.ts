@@ -1,3 +1,4 @@
+import {Inject} from '@nestjs/common';
 import {Injectable,BadRequestException} from '@nestjs/common';
 import {Request} from 'express';
 import {Auth} from '../auth/auth';
@@ -5,7 +6,7 @@ import {CatalogRepository} from './catalog.repository';
 import {int,str} from '../../common/validation';
 @Injectable()
 export class ProductsService{
- constructor(private readonly repository:CatalogRepository,private readonly auth:Auth){}
+ constructor(@Inject(CatalogRepository) private readonly repository:CatalogRepository,@Inject(Auth) private readonly auth:Auth){}
  list(q:Record<string,unknown>){return this.repository.search(q||{});}
  suggest(q:string){return q?.trim()?this.repository.suggest(q):Promise.resolve([]);}
  categories(){return this.repository.categories();}

@@ -1,10 +1,11 @@
+import {Inject} from '@nestjs/common';
 import {Injectable} from '@nestjs/common';
 import {Db} from '../../common/db';
 
 const integer=(value:unknown,fallback:number)=>{const n=Number(value);return Number.isSafeInteger(n)?n:fallback;};
 @Injectable()
 export class CatalogRepository {
- constructor(private readonly db:Db){}
+ constructor(@Inject(Db) private readonly db:Db){}
  async search(query:Record<string,unknown>){
   const args:unknown[]=[];const where=['p.active=true','p.parent_product_id IS NULL'];
   const add=(value:unknown)=>{args.push(value);return '$'+args.length;};
