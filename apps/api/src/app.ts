@@ -24,6 +24,8 @@ import {JobsController} from './modules/admin/jobs';
 import {JobsService} from './modules/admin/jobs.service';
 import {JobsRepository} from './modules/admin/jobs.repository';
 import {GuestController} from './modules/checkout/guest';
+import {GuestService} from './modules/checkout/guest.service';
+import {GuestRepository} from './modules/checkout/guest.repository';
 import {SecurityMiddleware} from './common/security';
 @Global()
 @Module({providers:[Db,CacheService],exports:[Db,CacheService]})
@@ -33,7 +35,7 @@ class InfrastructureModule{}
 class AuthModule{}
 @Module({imports:[InfrastructureModule,AuthModule],providers:[ProductsService,CatalogRepository,DiscoveryService,DiscoveryRepository],controllers:[ProductsController,DiscoveryController]})
 class CatalogModule{}
-@Module({imports:[InfrastructureModule,AuthModule],providers:[OrdersService,OrdersRepository],controllers:[OrdersController,GuestController]})
+@Module({imports:[InfrastructureModule,AuthModule],providers:[OrdersService,OrdersRepository,GuestService,GuestRepository],controllers:[OrdersController,GuestController]})
 class CheckoutModule{}
 @Module({imports:[InfrastructureModule,AuthModule],providers:[CustomerService,CustomerRepository],controllers:[CustomerController]})
 class CustomerModule{}
